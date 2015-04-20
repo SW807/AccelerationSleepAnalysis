@@ -140,18 +140,18 @@ public class AccelerationSleepAnalysis implements IScheduledTask {
     }
 
     private boolean isStationary(AccelerationData accelerationData, Queue<AccelerationData> previousDataQueue) {
-        boolean b = true;
         for (AccelerationData toConsider : previousDataQueue) {
             if (outOfThreshHold(accelerationData, toConsider))
-                b = false;
+                return false;
         }
-        return b;
+        return true;
     }
 
     private boolean outOfThreshHold(AccelerationData acc1, AccelerationData acc2) {
-        return Math.abs(acc1.accX - acc2.accX) > 0.5f ||
-                Math.abs(acc1.accY - acc2.accY) > 0.5f ||
-                Math.abs(acc1.accZ - acc2.accZ) > 0.5f;
+        float threshold = 0.5f;
+        return Math.abs(acc1.accX - acc2.accX) > threshold ||
+                Math.abs(acc1.accY - acc2.accY) > threshold ||
+                Math.abs(acc1.accZ - acc2.accZ) > threshold;
     }
 
     private List<AccelerationData> makeMovingAverage(List<AccelerationData> data) {
