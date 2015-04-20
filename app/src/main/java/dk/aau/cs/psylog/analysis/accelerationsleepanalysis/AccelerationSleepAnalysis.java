@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
+import android.util.Pair;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -23,14 +24,16 @@ import dk.aau.cs.psylog.module_lib.IScheduledTask;
 
 public class AccelerationSleepAnalysis implements IScheduledTask{
     ContentResolver contentResolver;
-    Uri SleepStationaryUri = Uri.parse(DBAccessContract.DBACCESS_CONTENTPROVIDER + "SLEEPSTATIONARY_state");
+    Uri accelerationSleepStateAnalysisUri = Uri.parse(DBAccessContract.DBACCESS_CONTENTPROVIDER + "ACCELERATIONSLEEPANALYSIS_state");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
     public AccelerationSleepAnalysis(Context context)
     {
         this.contentResolver = context.getContentResolver();
     }
+
     private Date loadTimeString() throws Exception {
-        Uri uri = SleepStationaryUri;
+        Uri uri = accelerationSleepStateAnalysisUri;
         Cursor cursor = contentResolver.query(uri, new String[]{"timeAcc"}, null, null, null);
         if(cursor.moveToFirst())
         {
@@ -47,6 +50,7 @@ public class AccelerationSleepAnalysis implements IScheduledTask{
             throw new Exception("No Time located");
         }
     }
+
     private List<AccelerationData> loadData()
     {
         Uri uri = Uri.parse(DBAccessContract.DBACCESS_CONTENTPROVIDER + "accelerometer_accelerations");
@@ -68,6 +72,7 @@ public class AccelerationSleepAnalysis implements IScheduledTask{
         return returnList;
 
     }
+
     private float probabilityFunc(float t)
     {
         float k = 1.0f;
@@ -77,12 +82,12 @@ public class AccelerationSleepAnalysis implements IScheduledTask{
     	return res;
     }
 
-    public LinkedHashMap<String, Float> Analyse()
+    public void Analyse()
     {
 
         Queue<AccelerationData> previousDataQueue= new LinkedList<>();
         List<AccelerationData> data = loadData();
-    	LinkedHashMap<String,Float> returnMap = new LinkedHashMap<>();
+    	List<Pair<String,Float>> resultMap = new ArrayList<>();
         if(data.size() > 5)
         {
             for(int i = 0; i < 5; i++)
@@ -91,7 +96,7 @@ public class AccelerationSleepAnalysis implements IScheduledTask{
         }
         else
         {
-            return null;
+            return;
         }
 
         Date oldTime;
@@ -103,7 +108,7 @@ public class AccelerationSleepAnalysis implements IScheduledTask{
                 oldTime = convertTimeString(data.get(0).time);
             }
             catch (NullPointerException ne) {
-                return null;
+                return;
             }
         }
 
@@ -121,17 +126,28 @@ public class AccelerationSleepAnalysis implements IScheduledTask{
                 probabilitySleeping = 0.0f;
                 oldTime = newTime;
             }
-            returnMap.put(acc.time, probabilitySleeping);
+            resultMap.add(new Pair<>(acc.time, probabilitySleeping));
 
             previousDataQueue.remove();
             previousDataQueue.add(acc);
         }
         updatePosition(oldTime, probabilitySleeping);
-        return returnMap;
+
+        writeToDB(resultMap);
+    }
+
+    private void writeToDB(List<Pair<String,Float>> pairs){
+        Uri accelerationSleepStateAnalysisUri = Uri.parse(DBAccessContract.DBACCESS_CONTENTPROVIDER + "ACCELERATIONSLEEPANALYSIS_sleepcalc");
+        for(Pair<String, Float> pair : pairs){
+            ContentValues values = new ContentValues();
+            values.put("prob", pair.second);
+            values.put("time",pair.first);
+            contentResolver.insert(accelerationSleepStateAnalysisUri, values);
+        }
     }
 
     private Date convertTimeString(String s){
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
         Date convertedTime = new Date();
         try {
             convertedTime = dateFormat.parse(s);
@@ -176,9 +192,10 @@ public class AccelerationSleepAnalysis implements IScheduledTask{
     }
 
     private int lastPos = -1;
+
     private int getLastPosition()
     {
-        Uri uri = SleepStationaryUri;
+        Uri uri = accelerationSleepStateAnalysisUri;
         Cursor cursor = contentResolver.query(uri, new String[]{"positionAcc"}, null, null, null);
         if(cursor.moveToFirst())
         {
@@ -195,21 +212,19 @@ public class AccelerationSleepAnalysis implements IScheduledTask{
 
     private void updatePosition(Date oldTime ,float lastProb)
     {
-        Uri uri = SleepStationaryUri;
+        Uri uri = accelerationSleepStateAnalysisUri;
         ContentValues values = new ContentValues();
         values.put("positionAcc", lastPos);
 
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        values.put("timeAcc", df.format(oldTime));
+        values.put("timeAcc", dateFormat.format(oldTime));
         values.put("probAcc", lastProb);
-        Cursor cursor = contentResolver.query(uri, new String[]{"_id", "positionAcc", "positionAmpl", "timeAcc" , "timeAmpl"}, null, null, null);
+        Cursor cursor = contentResolver.query(uri, new String[]{"_id", "positionAcc", "timeAcc"}, null, null, null);
         if(cursor.getCount() > 0)
         {
             contentResolver.update(uri, values, "1=1", null);
         }
         else
         {
-            values.put("positionAmpl", 0);
             contentResolver.insert(uri, values);
         }
         cursor.close();
