@@ -61,7 +61,6 @@ public class AccelerationSleepAnalysis implements IScheduledTask {
             cursor.close();
         }
         return returnList;
-
     }
 
     private float probabilityFunc(float t) {
@@ -73,10 +72,10 @@ public class AccelerationSleepAnalysis implements IScheduledTask {
     }
 
     public void Analyse() {
-
         Queue<AccelerationData> previousDataQueue = new LinkedList<>();
         List<AccelerationData> data = loadData();
         List<Pair<String, Float>> resultMap = new ArrayList<>();
+
         if (data.size() > 5) {
             for (int i = 0; i < 5; i++)
                 previousDataQueue.add(data.get(i));
@@ -111,8 +110,8 @@ public class AccelerationSleepAnalysis implements IScheduledTask {
             previousDataQueue.remove();
             previousDataQueue.add(acc);
         }
-        updatePosition(oldTime, probabilitySleeping);
 
+        updatePosition(oldTime, probabilitySleeping);
         writeToDB(resultMap);
     }
 
@@ -127,7 +126,6 @@ public class AccelerationSleepAnalysis implements IScheduledTask {
     }
 
     private Date convertTimeString(String s) {
-
         Date convertedTime = new Date();
         try {
             convertedTime = dateFormat.parse(s);
