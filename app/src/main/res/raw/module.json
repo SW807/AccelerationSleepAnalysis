@@ -1,0 +1,28 @@
+{
+  "name": "accelerationsleepanalysis",
+  "_version": 1.2,
+  "tables": [
+    {
+      "name": "sleepcalc",
+      "columns": [
+        { "name": "prob", "dataType": "REAL"}
+      ]
+    },
+    {
+      "name": "state",
+      "columns": [
+       { "name": "positionAcc", "dataType": "INTEGER"},
+       { "name": "timeAcc", "dataType": "TEXT"},
+       { "name": "probAcc", "dataType": "REAL"}
+      ]
+    }
+  ],
+  "dependencies": [
+          [
+              {
+                  "name": "accelerometer",
+                  "version": 1.0
+              }
+          ]
+      ]
+}
