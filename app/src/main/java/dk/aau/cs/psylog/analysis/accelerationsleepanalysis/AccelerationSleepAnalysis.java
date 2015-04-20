@@ -2,8 +2,11 @@ package dk.aau.cs.psylog.analysis.accelerationsleepanalysis;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -16,18 +19,15 @@ import java.util.List;
 import java.util.Queue;
 
 import dk.aau.cs.psylog.module_lib.DBAccessContract;
+import dk.aau.cs.psylog.module_lib.IScheduledTask;
 
-
-/**
- * Created by Praetorian on 24-03-2015.
- */
-public class AccelerationSleepAnalysis {
+public class AccelerationSleepAnalysis implements IScheduledTask{
     ContentResolver contentResolver;
     Uri SleepStationaryUri = Uri.parse(DBAccessContract.DBACCESS_CONTENTPROVIDER + "SLEEPSTATIONARY_state");
 
-    public AccelerationSleepAnalysis(ContentResolver contentResolver)
+    public AccelerationSleepAnalysis(Context context)
     {
-        this.contentResolver = contentResolver;
+        this.contentResolver = context.getContentResolver();
     }
     private Date loadTimeString() throws Exception {
         Uri uri = SleepStationaryUri;
@@ -213,6 +213,17 @@ public class AccelerationSleepAnalysis {
             contentResolver.insert(uri, values);
         }
         cursor.close();
+    }
+
+    @Override
+    public void doTask() {
+        this.Analyse();
+        Log.i("AccSleepAnalysis", "analysen færdig");
+    }
+
+    @Override
+    public void setParameters(Intent i) {
+
     }
 }
 
