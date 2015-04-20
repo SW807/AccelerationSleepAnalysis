@@ -182,10 +182,13 @@ public class AccelerationSleepAnalysis {
         Cursor cursor = contentResolver.query(uri, new String[]{"positionAcc"}, null, null, null);
         if(cursor.moveToFirst())
         {
-            return cursor.getInt(cursor.getColumnIndex("positionAcc"));
+            int res = cursor.getInt(cursor.getColumnIndex("positionAcc"));
+            cursor.close();
+            return res;
         }
         else
         {
+            cursor.close();
             return 0;
         }
     }
@@ -209,6 +212,7 @@ public class AccelerationSleepAnalysis {
             values.put("positionAmpl", 0);
             contentResolver.insert(uri, values);
         }
+        cursor.close();
     }
 }
 
