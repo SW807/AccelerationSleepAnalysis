@@ -1,6 +1,6 @@
 {
   "name": "accelerationsleepanalysis",
-  "_version": 1.2,
+  "_version": 1.0,
   "tables": [
     {
       "name": "sleepcalc",
@@ -24,5 +24,9 @@
                   "version": 1.0
               }
           ]
-      ]
+    ],
+    "task" : {
+      "type" : "interval",
+      "value": "5"
+    }
 }
