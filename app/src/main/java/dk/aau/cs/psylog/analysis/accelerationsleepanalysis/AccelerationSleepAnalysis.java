@@ -49,6 +49,7 @@ public class AccelerationSleepAnalysis implements IScheduledTask {
         Cursor cursor = contentResolver.query(uri, new String[]{"_id", "accX", "accY", "accZ", "time"}, null, null, null);
         List<AccelerationData> returnList = new ArrayList<>();
         int lastPosition = getLastPosition();
+        //Cuts away data already analysed
         if ((lastPosition > 5 && cursor.moveToPosition(lastPosition - 5)) || cursor.moveToFirst()) {
             do {
                 float accX = cursor.getFloat(cursor.getColumnIndex("accX"));
@@ -76,6 +77,7 @@ public class AccelerationSleepAnalysis implements IScheduledTask {
         List<AccelerationData> data = loadData();
         List<Pair<String, Float>> resultMap = new ArrayList<>();
 
+        //Creates moving avg of first 5 values
         if (data.size() > 5) {
             for (int i = 0; i < 5; i++)
                 previousDataQueue.add(data.get(i));
@@ -84,6 +86,7 @@ public class AccelerationSleepAnalysis implements IScheduledTask {
             return;
         }
 
+        //Fetches last wake time from database
         Date oldTime;
         try {
             oldTime = loadTimeString();
