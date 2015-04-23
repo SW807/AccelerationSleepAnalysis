@@ -155,7 +155,7 @@ public class AccelerationSleepAnalysis implements IScheduledTask {
 
     private List<AccelerationData> makeMovingAverage(List<AccelerationData> data) {
         if (data.size() == 0)
-            return null;
+            return new ArrayList<>();
         AccelerationData MAOld = data.get(0);
         float alpha = 0.1f;
         for (AccelerationData MAnew : data) {
